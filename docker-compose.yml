@@ -1,0 +1,8 @@
+musicbot:
+  build: .
+  restart: always
+  links:
+    - mongo
+mongo:
+  image: mongo
+  restart: always
