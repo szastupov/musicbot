@@ -12,3 +12,13 @@ Go ahead and [try it](https://telegram.me/MusicCatalogBot)!
 The bot doesn't store any media, instead it only stores track metadata, while files are hosted on Telegram servers.
 
 The bot is written in Python 3, powered by [aiotg](https://github.com/szastupov/aiotg) framework and uses [MongoDB](https://www.mongodb.com) for index.
+
+You can easily run your own instance with docker:
+```
+$ cp config.json.example config.json
+$ vi config.json # set your API token in config.json
+$ docker-compose build
+$ docker-compose up -d # We are up and running!
+```
+
+You can also do it without Docker, the requirements are specified in requirements.txt, you know the rest.
