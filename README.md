@@ -7,11 +7,14 @@ How does it work? You simply send an audio file (from Telegram Desktop, Web or O
 
 Go ahead and [try it](https://telegram.me/MusicCatalogBot)!
 
+![Screenshot](http://i.imgur.com/vRNxnDS.png)
+![Screenshot](http://i.imgur.com/qmvht6v.png)
+
 ### Technical side
 
 The bot doesn't store any media, instead it only stores track metadata, while files are hosted on Telegram servers.
 
-The bot is written in Python 3, powered by [aiotg](https://github.com/szastupov/aiotg) framework and uses [MongoDB](https://www.mongodb.com) for index.
+It's written in Python 3, powered by [aiotg](https://github.com/szastupov/aiotg) framework and uses [MongoDB](https://www.mongodb.com) for index.
 
 You can easily run your own instance with docker:
 ```
