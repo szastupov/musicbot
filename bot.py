@@ -47,16 +47,26 @@ db.tracks.create_index([
     ("title", pymongo.TEXT),
     ("performer", pymongo.TEXT)
 ])
+db.tracks.create_index([
+    ("file_id", pymongo.ASCENDING)
+])
 db.users.create_index("id")
 
 
 @bot.handle("audio")
 def add_track(chat, audio):
-    logger.info("%s added %s %s",
-        chat.sender, audio.get("performer"), audio.get("title"))
+    if db.tracks.find_one({ "file_id": audio["file_id"] }):
+        return
+
+    if "title" not in audio:
+        return chat.send_text("Sorry, but your track is missing title")
+
     doc = audio.copy()
     doc["sender"] = chat.sender["id"]
     db.tracks.insert_one(doc)
+
+    logger.info("%s added %s %s",
+        chat.sender, doc.get("performer"), doc.get("title"))
 
 
 async def search_tracks(chat, query, page=1):
