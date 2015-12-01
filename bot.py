@@ -163,6 +163,9 @@ def stats(chat, match):
     }
     aggr = list(db.tracks.aggregate([group]))
 
+    if len(aggr) == 0:
+        return chat.send_text("Stats are not yet available")
+
     duration = timedelta(seconds=aggr[0]["duration"])
     size = human_size(aggr[0]["size"])
     text = '%d tracks, %s, %s total duration.' % (count, size, duration)
