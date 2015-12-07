@@ -42,6 +42,7 @@ logger = logging.getLogger("musicbot")
 mongo = pymongo.MongoClient(host=os.environ.get("MONGO_HOST"))
 
 
+# Setup DB and indexes
 db = mongo.music
 db.tracks.create_index([
     ("title", pymongo.TEXT),
@@ -67,45 +68,6 @@ def add_track(chat, audio):
 
     logger.info("%s added %s %s",
         chat.sender, doc.get("performer"), doc.get("title"))
-
-
-async def search_tracks(chat, query, page=1):
-    logger.info("%s searching for %s", chat.sender, query)
-
-    limit = 3
-    offset = (page - 1) * limit
-
-    results = db.tracks.find(
-        { '$text': { '$search': query } },
-        { 'score': { '$meta': 'textScore' } }
-    ).sort([('score', {'$meta': 'textScore'})]).skip(offset).limit(3)
-
-    count = results.count()
-    if results.count() == 0:
-        await chat.send_text(not_found)
-        return
-
-    newoff = offset + limit
-    show_more = count > newoff
-
-    if show_more:
-        pages = math.ceil(count / limit)
-        kb = [['(%d/%d) Show more for "%s"' % (page, pages, query)]]
-        keyboard = {
-            "keyboard": kb,
-            "resize_keyboard": True
-        }
-    else:
-        keyboard = { "hide_keyboard": True }
-
-    for track in results:
-        await chat.send_audio(
-            audio=track["file_id"],
-            title=track.get("title"),
-            performer=track.get("performer"),
-            duration=track.get("duration"),
-            reply_markup=json.dumps(keyboard)
-        )
 
 
 @bot.command(r'/music (.+)')
@@ -152,6 +114,26 @@ def usage(chat, match):
     return chat.send_text(help)
 
 
+@bot.command(r'/stats')
+def stats(chat, match):
+    count = db.tracks.count()
+    group = {
+        "$group": {
+            "_id": None,
+            "size": {"$sum": "$file_size"}
+        }
+    }
+    aggr = list(db.tracks.aggregate([group]))
+
+    if len(aggr) == 0:
+        return chat.send_text("Stats are not yet available")
+
+    size = human_size(aggr[0]["size"])
+    text = '%d tracks, %s' % (count, size)
+
+    return chat.send_text(text)
+
+
 def human_size(nbytes):
     suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
     rank = int((math.log10(nbytes)) / 3)
@@ -161,26 +143,57 @@ def human_size(nbytes):
     return '%s %s' % (f, suffixes[rank])
 
 
-@bot.command(r'/stats')
-def stats(chat, match):
-    count = db.tracks.count()
-    group = {
-        "$group": {
-            "_id": None,
-            "duration": {"$sum": "$duration"},
-            "size": {"$sum": "$file_size"}
+def send_track(chat, keyboard, track):
+    return chat.send_audio(
+        audio=track["file_id"],
+        title=track.get("title"),
+        performer=track.get("performer"),
+        duration=track.get("duration"),
+        reply_markup=json.dumps(keyboard)
+    )
+
+
+def search_db(query):
+    return db.tracks.find(
+        { '$text': { '$search': query } },
+        { 'score': { '$meta': 'textScore' } }
+    ).sort([('score', {'$meta': 'textScore'})])
+
+
+async def search_tracks(chat, query, page=1):
+    logger.info("%s searching for %s", chat.sender, query)
+
+    limit = 3
+    offset = (page - 1) * limit
+
+    results = search_db(query)
+    results.skip(offset).limit(limit)
+
+    count = results.count()
+    if results.count() == 0:
+        await chat.send_text(not_found)
+        return
+
+    # Return single result if we have exact match for title and performer
+    if results[0]['score'] >= 2:
+        limit = 1
+        results = results[:1]
+
+    newoff = offset + limit
+    show_more = count > newoff
+
+    if show_more:
+        pages = math.ceil(count / limit)
+        kb = [['(%d/%d) Show more for "%s"' % (page, pages, query)]]
+        keyboard = {
+            "keyboard": kb,
+            "resize_keyboard": True
         }
-    }
-    aggr = list(db.tracks.aggregate([group]))
+    else:
+        keyboard = { "hide_keyboard": True }
 
-    if len(aggr) == 0:
-        return chat.send_text("Stats are not yet available")
-
-    duration = timedelta(seconds=aggr[0]["duration"])
-    size = human_size(aggr[0]["size"])
-    text = '%d tracks, %s, %s total duration.' % (count, size, duration)
-
-    return chat.send_text(text)
+    for track in results:
+        await send_track(chat, keyboard, track)
 
 
 if __name__ == '__main__':
