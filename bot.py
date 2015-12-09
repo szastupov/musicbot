@@ -70,6 +70,8 @@ def add_track(chat, audio):
         chat.sender, doc.get("performer"), doc.get("title"))
 
 
+@bot.command(r'@%s (.+)' % bot.name)
+@bot.command(r'/music@%s (.+)' % bot.name)
 @bot.command(r'/music (.+)')
 def music(chat, match):
     return search_tracks(chat, match.group(1))
@@ -86,7 +88,7 @@ def default(chat, message):
     return search_tracks(chat, message["text"])
 
 
-@bot.command(r'/music$')
+@bot.command(r'/music(@%s)?$' % bot.name)
 def usage(chat, match):
     return chat.send_text(greeting)
 
@@ -109,7 +111,7 @@ def stop(chat, match):
     return chat.send_text("Goodbye! We will miss you 😢")
 
 
-@bot.command(r'(/?help)')
+@bot.command(r'/?help')
 def usage(chat, match):
     return chat.send_text(help)
 
