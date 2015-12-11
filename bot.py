@@ -85,21 +85,22 @@ def usage(chat, match):
 
 
 @bot.command(r'/start')
-def start(chat, match):
+async def start(chat, match):
     tuid = chat.sender["id"]
-    if not db.users.find_one({ "id": tuid }):
+    if not (await db.users.find_one({ "id": tuid })):
         logger.info("new user %s", chat.sender)
-        db.users.insert_one(chat.sender.copy())
+        await db.users.insert(chat.sender.copy())
 
-    return chat.send_text(greeting)
+    await chat.send_text(greeting)
 
 
 @bot.command(r'/stop')
-def stop(chat, match):
+async def stop(chat, match):
     tuid = chat.sender["id"]
-    db.users.delete_one({ "id": tuid })
+    await db.users.remove({ "id": tuid })
+
     logger.info("%s quit", chat.sender)
-    return chat.send_text("Goodbye! We will miss you 😢")
+    await chat.send_text("Goodbye! We will miss you 😢")
 
 
 @bot.command(r'/?help')
