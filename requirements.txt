@@ -1,2 +1,2 @@
 aiotg
-pymongo
+motor

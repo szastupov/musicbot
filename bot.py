@@ -5,6 +5,7 @@ import asyncio
 import json
 import math
 
+from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import timedelta
 from aiotg import TgBot
 
@@ -39,32 +40,22 @@ with open("config.json") as cfg:
 
 bot = TgBot(**config)
 logger = logging.getLogger("musicbot")
-mongo = pymongo.MongoClient(host=os.environ.get("MONGO_HOST"))
-
-
-# Setup DB and indexes
-db = mongo.music
-db.tracks.create_index([
-    ("title", pymongo.TEXT),
-    ("performer", pymongo.TEXT)
-])
-db.tracks.create_index([
-    ("file_id", pymongo.ASCENDING)
-])
-db.users.create_index("id")
+client = AsyncIOMotorClient(host=os.environ.get("MONGO_HOST"))
+db = client.music
 
 
 @bot.handle("audio")
-def add_track(chat, audio):
-    if db.tracks.find_one({ "file_id": audio["file_id"] }):
+async def add_track(chat, audio):
+    if (await db.tracks.find_one({ "file_id": audio["file_id"] })):
         return
 
     if "title" not in audio:
-        return chat.send_text("Sorry, but your track is missing title")
+        await chat.send_text("Sorry, but your track is missing title")
+        return
 
     doc = audio.copy()
     doc["sender"] = chat.sender["id"]
-    db.tracks.insert_one(doc)
+    await db.tracks.insert(doc)
 
     logger.info("%s added %s %s",
         chat.sender, doc.get("performer"), doc.get("title"))
@@ -117,23 +108,24 @@ def usage(chat, match):
 
 
 @bot.command(r'/stats')
-def stats(chat, match):
-    count = db.tracks.count()
+async def stats(chat, match):
+    count = await db.tracks.count()
     group = {
         "$group": {
             "_id": None,
             "size": {"$sum": "$file_size"}
         }
     }
-    aggr = list(db.tracks.aggregate([group]))
+    cursor = db.tracks.aggregate([group])
+    aggr = await cursor.to_list(1)
 
     if len(aggr) == 0:
-        return chat.send_text("Stats are not yet available")
+        return (await chat.send_text("Stats are not yet available"))
 
     size = human_size(aggr[0]["size"])
     text = '%d tracks, %s' % (count, size)
 
-    return chat.send_text(text)
+    return (await chat.send_text(text))
 
 
 def human_size(nbytes):
@@ -168,11 +160,10 @@ async def search_tracks(chat, query, page=1):
     limit = 3
     offset = (page - 1) * limit
 
-    results = search_db(query)
-    results.skip(offset).limit(limit)
+    cursor = search_db(query).skip(offset).limit(limit)
+    results = await cursor.to_list(limit)
 
-    count = results.count()
-    if results.count() == 0:
+    if len(results) == 0:
         await chat.send_text(not_found)
         return
 
@@ -182,10 +173,10 @@ async def search_tracks(chat, query, page=1):
         results = results[:1]
 
     newoff = offset + limit
-    show_more = count > newoff
+    show_more = len(results) > newoff
 
     if show_more:
-        pages = math.ceil(count / limit)
+        pages = math.ceil(len(results) / limit)
         kb = [['(%d/%d) Show more for "%s"' % (page, pages, query)]]
         keyboard = {
             "keyboard": kb,
@@ -198,6 +189,23 @@ async def search_tracks(chat, query, page=1):
         await send_track(chat, keyboard, track)
 
 
+async def prepare_index():
+    await db.tracks.create_index([
+        ("title", pymongo.TEXT),
+        ("performer", pymongo.TEXT)
+    ])
+    await db.tracks.create_index([
+        ("file_id", pymongo.ASCENDING)
+    ])
+    await db.users.create_index("id")
+
+
+async def main():
+    await prepare_index()
+    await bot.loop()
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    bot.run()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
