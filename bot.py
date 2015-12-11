@@ -161,9 +161,10 @@ async def search_tracks(chat, query, page=1):
     offset = (page - 1) * limit
 
     cursor = search_db(query).skip(offset).limit(limit)
+    count = await cursor.count()
     results = await cursor.to_list(limit)
 
-    if len(results) == 0:
+    if count == 0:
         await chat.send_text(not_found)
         return
 
@@ -173,10 +174,10 @@ async def search_tracks(chat, query, page=1):
         results = results[:1]
 
     newoff = offset + limit
-    show_more = len(results) > newoff
+    show_more = count > newoff
 
     if show_more:
-        pages = math.ceil(len(results) / limit)
+        pages = math.ceil(count / limit)
         kb = [['(%d/%d) Show more for "%s"' % (page, pages, query)]]
         keyboard = {
             "keyboard": kb,
