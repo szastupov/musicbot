@@ -170,7 +170,7 @@ async def search_tracks(chat, query, page=1):
         return
 
     # Return single result if we have exact match for title and performer
-    if results[0]['score'] >= 2:
+    if results[0]['score'] > 2:
         limit = 1
         results = results[:1]
 
