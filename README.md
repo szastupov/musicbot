@@ -7,6 +7,10 @@ How does it work? You simply send an audio file (from Telegram Desktop, Web or O
 
 Go ahead and [try it](https://telegram.me/MusicCatalogBot)!
 
+
+**UPDATE**: The bot is blocked on iOS due to Apple complaints. Well, that was expected. Good luck Apple with your walled garden, I'm not buying iOS anymore.
+
+
 ![Screenshot](http://i.imgur.com/vRNxnDS.png)
 ![Screenshot](http://i.imgur.com/qmvht6v.png)
 
