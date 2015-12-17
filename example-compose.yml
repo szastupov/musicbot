@@ -4,9 +4,9 @@ musicbot:
   links:
     - mongo
   environment:
-    - BOT_NAME=BotPlaygroundBot
-    - API_TOKEN="Telegram API token"
-    - BOTAN_TOKEN="Optional botan token"
+    - BOT_NAME=MusicCatalogBot
+    - API_TOKEN=Telegram API token
+    - BOTAN_TOKEN=Optional botan token
     - MONGO_HOST=mongo
 mongo:
   image: mongo
