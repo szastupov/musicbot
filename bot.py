@@ -34,11 +34,12 @@ We don't have anything matching your search yet :/
 But you can fix it by sending us the tracks you love as audio files!
 """
 
-with open("config.json") as cfg:
-    config = json.load(cfg)
 
-
-bot = TgBot(**config)
+bot = TgBot(
+    api_token=os.environ.get("API_TOKEN"),
+    name=os.environ.get("BOT_NAME"),
+    botan_token=os.environ.get("BOTAN_TOKEN")
+)
 logger = logging.getLogger("musicbot")
 client = AsyncIOMotorClient(host=os.environ.get("MONGO_HOST"))
 db = client.music

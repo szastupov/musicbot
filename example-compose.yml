@@ -1,0 +1,13 @@
+musicbot:
+  build: .
+  restart: always
+  links:
+    - mongo
+  environment:
+    - BOT_NAME=BotPlaygroundBot
+    - API_TOKEN="Telegram API token"
+    - BOTAN_TOKEN="Optional botan token"
+    - MONGO_HOST=mongo
+mongo:
+  image: mongo
+  restart: always

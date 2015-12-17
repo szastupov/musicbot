@@ -1,10 +1,9 @@
 FROM python
 
-ADD requirements.txt bot.py config.json /bot/
-
+ADD requirements.txt /bot/
 WORKDIR /bot
-
 RUN pip install -r ./requirements.txt
 
-ENV MONGO_HOST mongo
+ADD bot.py /bot/
+
 CMD ["python", "./bot.py"]
