@@ -22,8 +22,8 @@ It's written in Python 3, powered by [aiotg](https://github.com/szastupov/aiotg)
 
 You can easily run your own instance with docker:
 ```
-$ cp config.json.example config.json
-$ vi config.json # set your API token in config.json
+$ cp example-compose.yml docker-compose.yml
+$ vi docker-compose.yml # set your API token
 $ docker-compose build
 $ docker-compose up -d # We are up and running!
 ```
