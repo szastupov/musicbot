@@ -20,12 +20,33 @@ The bot doesn't store any media, instead it only stores track metadata, while fi
 
 It's written in Python 3, powered by [aiotg](https://github.com/szastupov/aiotg) framework and uses [MongoDB](https://www.mongodb.com) for index.
 
-You can easily run your own instance with docker:
+You can easily run your own instance with [docker-compose](1):
+```yml
+musicbot:
+  image: szastupov/musicbot
+  restart: always
+  links:
+    - mongo
+  environment:
+    - BOT_NAME=MusicCatalogBot
+    - API_TOKEN=Telegram API token
+    - BOTAN_TOKEN=Optional botan token
+    - MONGO_HOST=mongo
+mongo:
+  image: mongo
+  restart: always
 ```
-$ cp example-compose.yml docker-compose.yml
-$ vi docker-compose.yml # set your API token
-$ docker-compose build
-$ docker-compose up -d # We are up and running!
+
+Or directly with docker:
+```
+$ docker pull szastupov/musicbot
+$ docker run -e "API_TOKEN=YOUR_TOKEN" \
+             -e "BOT_NAME=BotPlaygroundBot" \
+             -e "MONGO_HOST=mongo" \
+             --link mongo:mongo \
+             szastupov/musicbot
 ```
 
 You can also do it without Docker, the requirements are specified in requirements.txt, you know the rest.
+
+[1]: https://docs.docker.com/compose/
