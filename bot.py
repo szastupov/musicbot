@@ -1,13 +1,10 @@
 import os
 import logging
-import pymongo
-import asyncio
 import json
 import math
 
-from motor.motor_asyncio import AsyncIOMotorClient
-from datetime import timedelta
 from aiotg import TgBot
+from database import db, text_search
 
 greeting = """
     ✋ Welcome to Telegram Music Catalog! 🎧
@@ -41,8 +38,6 @@ bot = TgBot(
     botan_token=os.environ.get("BOTAN_TOKEN")
 )
 logger = logging.getLogger("musicbot")
-client = AsyncIOMotorClient(host=os.environ.get("MONGO_HOST"))
-db = client.music
 
 
 @bot.handle("audio")
@@ -149,20 +144,13 @@ def send_track(chat, keyboard, track):
     )
 
 
-def search_db(query):
-    return db.tracks.find(
-        { '$text': { '$search': query } },
-        { 'score': { '$meta': 'textScore' } }
-    ).sort([('score', {'$meta': 'textScore'})])
-
-
 async def search_tracks(chat, query, page=1):
     logger.info("%s searching for %s", chat.sender, query)
 
     limit = 3
     offset = (page - 1) * limit
 
-    cursor = search_db(query).skip(offset).limit(limit)
+    cursor = text_search(query).skip(offset).limit(limit)
     count = await cursor.count()
     results = await cursor.to_list(limit)
 
@@ -190,25 +178,3 @@ async def search_tracks(chat, query, page=1):
 
     for track in results:
         await send_track(chat, keyboard, track)
-
-
-async def prepare_index():
-    await db.tracks.create_index([
-        ("title", pymongo.TEXT),
-        ("performer", pymongo.TEXT)
-    ])
-    await db.tracks.create_index([
-        ("file_id", pymongo.ASCENDING)
-    ])
-    await db.users.create_index("id")
-
-
-async def main():
-    await prepare_index()
-    await bot.loop()
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())

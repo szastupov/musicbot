@@ -4,6 +4,6 @@ ADD requirements.txt /bot/
 WORKDIR /bot
 RUN pip install -r ./requirements.txt
 
-ADD bot.py /bot/
+ADD *.py /bot/
 
-CMD ["python", "./bot.py"]
+CMD ["python", "./main.py"]
