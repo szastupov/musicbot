@@ -26,7 +26,7 @@ class RestBridge:
         offset = request.GET.get("offset", 0)
         limit = request.GET.get("limit", 10)
 
-        cursor = text_search if text else db.tracks.find({})
+        cursor = text_search(text) if text else db.tracks.find({})
 
         cursor = cursor.skip(offset).limit(limit)
         results = await cursor.to_list(limit)
