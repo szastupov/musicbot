@@ -7,3 +7,5 @@ RUN pip install -r ./requirements.txt
 ADD *.py /bot/
 
 CMD ["python", "./main.py"]
+
+EXPOSE 8080
