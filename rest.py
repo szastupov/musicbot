@@ -43,13 +43,20 @@ class RestBridge:
 
         file = await self.bot.get_file(file_id)
         file_path = file["file_path"]
+        range = request.headers.get("range")
 
-        resp = web.StreamResponse()
-        resp.content_length = file["file_size"]
-        resp.content_type = record["mime_type"]
-        await resp.prepare(request)
+        async with self.bot.download_file(file_path, range) as r:
+            # Prepare headers
+            resp = web.StreamResponse(status=r.status)
+            resp.content_type = record["mime_type"]
+            for h in ["content-length", "content-range", "etag"]:
+                val = r.headers.get(h)
+                if val:
+                    resp.headers[h] = val
 
-        async with self.bot.download_file(file_path) as r:
+            await resp.prepare(request)
+
+            # Send content
             while True:
                 chunk = await r.content.read(chunk_size)
                 if not chunk:
