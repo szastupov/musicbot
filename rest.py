@@ -23,16 +23,21 @@ class RestBridge:
 
     async def search(self, request):
         text = request.GET.get("text")
-        offset = request.GET.get("offset", 0)
-        limit = request.GET.get("limit", 10)
+        offset = int(request.GET.get("offset", 0))
+        limit = int(request.GET.get("limit", 10))
 
         cursor = text_search(text) if text else db.tracks.find({})
-
-        cursor = cursor.skip(offset).limit(limit)
-        results = await cursor.to_list(limit)
+        total = await cursor.count()
+        results = await cursor.skip(offset).limit(limit).to_list(limit)
         for r in results:
             del r["_id"]
-        return web.json_response(results)
+
+        return web.json_response({
+            "tracks": results,
+            "offset": offset,
+            "limit": limit,
+            "total": total
+        })
 
     async def download_file(self, request):
         file_id = request.match_info['file_id']
