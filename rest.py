@@ -49,12 +49,13 @@ class RestBridge:
         file = await self.bot.get_file(file_id)
         file_path = file["file_path"]
         range = request.headers.get("range")
+        copy_headers = ["content-length", "content-range", "etag", "last-modified"]
 
         async with self.bot.download_file(file_path, range) as r:
             # Prepare headers
             resp = web.StreamResponse(status=r.status)
             resp.content_type = record["mime_type"]
-            for h in ["content-length", "content-range", "etag"]:
+            for h in copy_headers:
                 val = r.headers.get(h)
                 if val:
                     resp.headers[h] = val
