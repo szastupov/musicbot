@@ -18,7 +18,7 @@ async def stop():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(start())
