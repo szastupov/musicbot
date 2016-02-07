@@ -1,2 +1,2 @@
-aiotg>=0.6.3
+aiotg>=0.7.0
 motor>=0.5
