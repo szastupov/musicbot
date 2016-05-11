@@ -75,6 +75,14 @@ def default(chat, message):
     return search_tracks(chat, message["text"])
 
 
+@bot.inline
+async def inline(iq):
+    logger.info("%s searching for %s", iq.sender, iq.query)
+    cursor = text_search(iq.query)
+    results = [inline_result(t) for t in await cursor.to_list(10)]
+    await iq.answer(results)
+
+
 @bot.command(r'/music(@%s)?$' % bot.name)
 def usage(chat, match):
     return chat.send_text(greeting)
@@ -178,3 +186,15 @@ async def search_tracks(chat, query, page=1):
 
     for track in results:
         await send_track(chat, keyboard, track)
+
+
+def inline_result(track):
+    return {
+        "type": "audio",
+        "id": track["file_id"],
+        "audio_file_id": track["file_id"],
+        "title": "{} - {}".format(
+            track.get("performer", "Unknown Artist"),
+            track.get("title", "Untitled")
+        )
+    }
