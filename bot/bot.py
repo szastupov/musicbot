@@ -192,9 +192,5 @@ def inline_result(track):
     return {
         "type": "audio",
         "id": track["file_id"],
-        "audio_file_id": track["file_id"],
-        "title": "{} - {}".format(
-            track.get("performer", "Unknown Artist"),
-            track.get("title", "Untitled")
-        )
+        "audio_file_id": track["file_id"]
     }
