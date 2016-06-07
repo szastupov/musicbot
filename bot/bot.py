@@ -3,7 +3,7 @@ import logging
 import json
 import math
 
-from aiotg import TgBot
+from aiotg import Bot
 from database import db, text_search
 
 greeting = """
@@ -32,7 +32,7 @@ But you can fix it by sending us the tracks you love as audio files!
 """
 
 
-bot = TgBot(
+bot = Bot(
     api_token=os.environ.get("API_TOKEN"),
     name=os.environ.get("BOT_NAME"),
     botan_token=os.environ.get("BOTAN_TOKEN")
