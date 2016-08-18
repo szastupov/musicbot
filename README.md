@@ -3,12 +3,12 @@ Music Catalog Bot
 
 This Telegram bot maintains a user generated catalog of music.
 
-How does it work? You simply send an audio file (from Telegram Desktop, Web or OSX) to the bot and it's added to the public catalog. All tracks are indexed and available for everyone from any Telegram client.
+How does it work? You simply send audio file (from Telegram Desktop, Web or OSX) to the bot and it's added to the public catalog. All tracks are indexed and available for everyone from any Telegram client.
 
 Go ahead and [try it](https://telegram.me/MusicCatalogBot)!
 
 
-**UPDATE**: The bot is blocked on iOS due to Apple complaints, but you still can build your own from source or docker image and use privatly.
+**UPDATE**: The bot is blocked on iOS due to Apple complaints, but you still can build your own from source or a docker image and use it privatly.
 
 
 ![Screenshot](http://i.imgur.com/vRNxnDS.png)
@@ -16,7 +16,7 @@ Go ahead and [try it](https://telegram.me/MusicCatalogBot)!
 
 ### Technical side
 
-The bot doesn't store any media, instead it only stores track metadata, while files are hosted on Telegram servers.
+The bot doesn't store any media, instead it only keeps track metadata, while the files are hosted on Telegram servers.
 
 It's written in Python 3, powered by [aiotg](https://github.com/szastupov/aiotg) framework and uses [MongoDB](https://www.mongodb.com) for index.
 
@@ -47,6 +47,6 @@ $ docker run -e "API_TOKEN=YOUR_TOKEN" \
              szastupov/musicbot
 ```
 
-You can also do it without Docker, the requirements are specified in requirements.txt, you know the rest.
+Or you can run it manually, the requirements are specified in requirements.txt, you know the rest.
 
 [1]: https://docs.docker.com/compose/
