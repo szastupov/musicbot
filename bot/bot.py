@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import math
+import random
 
 from aiotg import Bot
 from database import db, text_search
@@ -42,7 +43,7 @@ logger = logging.getLogger("musicbot")
 
 @bot.handle("audio")
 async def add_track(chat, audio):
-    if (await db.tracks.find_one({ "file_id": audio["file_id"] })):
+    if (await db.tracks.find_one({"file_id": audio["file_id"]})):
         return
 
     if "title" not in audio:
@@ -53,8 +54,8 @@ async def add_track(chat, audio):
     doc["sender"] = chat.sender["id"]
     await db.tracks.insert(doc)
 
-    logger.info("%s added %s %s",
-        chat.sender, doc.get("performer"), doc.get("title"))
+    logger.info("%s added %s %s", chat.sender,
+                doc.get("performer"), doc.get("title"))
 
 
 @bot.command(r'@%s (.+)' % bot.name)
@@ -84,14 +85,14 @@ async def inline(iq):
 
 
 @bot.command(r'/music(@%s)?$' % bot.name)
-def usage(chat, match):
+def greeting(chat, match):
     return chat.send_text(greeting)
 
 
 @bot.command(r'/start')
 async def start(chat, match):
     tuid = chat.sender["id"]
-    if not (await db.users.find_one({ "id": tuid })):
+    if not (await db.users.find_one({"id": tuid})):
         logger.info("new user %s", chat.sender)
         await db.users.insert(chat.sender.copy())
 
@@ -101,7 +102,7 @@ async def start(chat, match):
 @bot.command(r'/stop')
 async def stop(chat, match):
     tuid = chat.sender["id"]
-    await db.users.remove({ "id": tuid })
+    await db.users.remove({"id": tuid})
 
     logger.info("%s quit", chat.sender)
     await chat.send_text("Goodbye! We will miss you 😢")
@@ -110,6 +111,47 @@ async def stop(chat, match):
 @bot.command(r'/?help')
 def usage(chat, match):
     return chat.send_text(help)
+
+
+@bot.command(r'/?favorites')
+async def favorites(chat, match):
+    # TODO: show real favorites
+    cursor = db.tracks.find({})
+    results = await cursor.to_list(10)
+    for track in results:
+        await send_track(chat, {}, track)
+    # TODO: pagination
+
+
+def like(cq):
+    # TODO: store like
+
+    reactions = ['♥️', '👍', '🤘', '🔥', '👊', '👏']
+    reaction = random.choice(reactions)
+
+    # TODO: update icon in private chats
+
+    audio = cq.message["audio"]
+    header = ' "{title}" by {performer}'.format(**audio)
+
+    return cq.answer(text=reaction + header)
+
+
+async def show_more(cq, page, query):
+    await search_tracks(cq.chat, query, page)
+    await cq.chat.edit_reply_markup(
+        cq.message,
+        make_keyboard(cq.message["audio"])
+    )
+
+
+@bot.callback
+def on_callback(cq):
+    msg = json.loads(cq.data)
+    if msg["cmd"] == "like":
+        return like(cq)
+    elif msg["cmd"] == "more":
+        return show_more(cq, **msg["pld"])
 
 
 @bot.command(r'/stats')
@@ -142,6 +184,36 @@ def human_size(nbytes):
     return '%s %s' % (f, suffixes[rank])
 
 
+def inline_result(track):
+    return {
+        "type": "audio",
+        "id": track["file_id"],
+        "audio_file_id": track["file_id"],
+        "title": "{} - {}".format(
+            track.get("performer", "Unknown Artist"),
+            track.get("title", "Untitled")
+        )
+    }
+
+
+def callback_button(text, cmd, **payload):
+    return {
+        "text": text,
+        "callback_data": json.dumps({
+            "cmd": cmd,
+            "pld": payload
+        })
+    }
+
+
+def make_keyboard(track):
+    return {
+        "inline_keyboard": [
+            [callback_button("👍", "like")]
+        ]
+    }
+
+
 def send_track(chat, keyboard, track):
     return chat.send_audio(
         audio=track["file_id"],
@@ -155,7 +227,7 @@ def send_track(chat, keyboard, track):
 async def search_tracks(chat, query, page=1):
     logger.info("%s searching for %s", chat.sender, query)
 
-    limit = 3
+    limit = 1
     offset = (page - 1) * limit
 
     cursor = text_search(query).skip(offset).limit(limit)
@@ -174,27 +246,12 @@ async def search_tracks(chat, query, page=1):
     newoff = offset + limit
     show_more = count > newoff
 
-    if show_more:
-        pages = math.ceil(count / limit)
-        kb = [['(%d/%d) Show more for "%s"' % (page, pages, query)]]
-        keyboard = {
-            "keyboard": kb,
-            "resize_keyboard": True
-        }
-    else:
-        keyboard = { "hide_keyboard": True }
+    for i, track in enumerate(results):
+        keyboard = make_keyboard(track)
+        if show_more and i + 1 == limit:
+            keyboard["inline_keyboard"].append([
+                callback_button("Show more", "more",
+                                page=page + 1, query=query)
+            ])
 
-    for track in results:
         await send_track(chat, keyboard, track)
-
-
-def inline_result(track):
-    return {
-        "type": "audio",
-        "id": track["file_id"],
-        "audio_file_id": track["file_id"],
-        "title": "{} - {}".format(
-            track.get("performer", "Unknown Artist"),
-            track.get("title", "Untitled")
-        )
-    }
