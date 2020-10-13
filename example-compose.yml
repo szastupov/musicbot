@@ -6,7 +6,7 @@ musicbot:
   environment:
     - BOT_NAME=MusicCatalogBot
     - API_TOKEN=Telegram API token
-    - BOTAN_TOKEN=Optional botan token
+    - BOTAN_TOKEN=
     - MONGO_HOST=mongo
 mongo:
   image: mongo
