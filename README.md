@@ -39,8 +39,8 @@ mongo:
 
 Or directly with docker:
 ```
-$ docker pull szastupov/musicbot
-$ docker run -e "API_TOKEN=YOUR_TOKEN" \
+docker pull szastupov/musicbot
+docker run -e "API_TOKEN=YOUR_TOKEN" \
              -e "BOT_NAME=BotPlaygroundBot" \
              -e "MONGO_HOST=mongo" \
              --link mongo:mongo \
