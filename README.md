@@ -5,12 +5,6 @@ This Telegram bot maintains a user generated catalog of music.
 
 How does it work? You simply send audio file (from Telegram Desktop, Web or OSX) to the bot and it's added to the public catalog. All tracks are indexed and available for everyone from any Telegram client.
 
-Go ahead and [try it](https://telegram.me/MusicCatalogBot)!
-
-
-**UPDATE**: The bot is blocked on iOS due to Apple complaints, but you still can build your own from source or a docker image and use it privatly.
-
-
 ![Screenshot](http://i.imgur.com/vRNxnDS.png)
 ![Screenshot](http://i.imgur.com/qmvht6v.png)
 
